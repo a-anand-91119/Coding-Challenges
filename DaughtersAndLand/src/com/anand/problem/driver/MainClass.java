@@ -3,19 +3,17 @@ package com.anand.problem.driver;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.BitSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.google.common.hash.BloomFilter;
-import com.google.common.hash.Funnels;
 
 public class MainClass {
 
 	private static Map<Integer, MainClass.Range> selectedMap = new LinkedHashMap<Integer, MainClass.Range>();
 	private static int lengthOfLand = 0;
-	private static BloomFilter<Integer> filter = null;
-
-	private static long time = 0;
+	//private static List<Range> unavailableLand = null;
+	private static BitSet usedLand = null;
 
 	public static void main(String[] args) throws IOException {
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
@@ -24,8 +22,9 @@ public class MainClass {
 		lengthOfLand = Integer.parseInt(firstLine[0]);
 		int noOfDaughters = Integer.parseInt(firstLine[1]);
 
-		filter = BloomFilter.create(Funnels.integerFunnel(), lengthOfLand, 0.01);
-
+		//unavailableLand = new ArrayList<MainClass.Range>();
+		usedLand = new BitSet();
+		
 		MainClass mainClass = new MainClass();
 
 		mainClass.read(in, noOfDaughters);
@@ -33,9 +32,8 @@ public class MainClass {
 		long startTime = System.currentTimeMillis();
 		mainClass.compute(noOfDaughters);
 		long computeTime = System.currentTimeMillis() - startTime;
+		
 		System.out.println("ComputeTime: " + computeTime + "(ms)");
-		System.out.println("Read Overhead: " + time + "(ms)");
-		System.out.println("Total Time: " + (computeTime + time) + "(ms)");
 	}
 
 	private void compute(int noOfDaughters) {
@@ -53,8 +51,10 @@ public class MainClass {
 			}
 
 			System.out.println(r.setRangeAndValues(newStart, newEnd));
-			filter.put(newStart);
-			filter.put(newEnd);
+			usedLand.set(newStart);
+			usedLand.set(newEnd);
+			//unavailableLand.add(new Range(newEnd, newEnd));
+			
 		}
 	}
 
@@ -68,18 +68,16 @@ public class MainClass {
 
 	private int getNewEnd(int end) {
 		for (int test = end + 1; test < lengthOfLand; test++) {
-			if (!filter.mightContain(test)) {
+			if(!usedLand.get(test))
 				return test;
-			}
 		}
 		return end;
 	}
 
 	private int getNewStart(int start) {
 		for (int test = start - 1; test >= 0; test--) {
-			if (!filter.mightContain(test)) {
+			if(!usedLand.get(test))
 				return test;
-			}
 		}
 		return start;
 	}
@@ -88,13 +86,12 @@ public class MainClass {
 		for (int i = 0; i < noOfDaughters; i++) {
 			String[] choice = in.readLine().split("\\s");
 
-			long start = System.currentTimeMillis();
 			Range range = new Range(Integer.parseInt(choice[0]), Integer.parseInt(choice[1]));
 			selectedMap.put(i, range);
 
-			for (int x = range.getStart(); x <= range.getEnd(); x++)
-				filter.put(x);
-			time += (System.currentTimeMillis() - start);
+			for(int x=range.start;x<=range.end;x++) {
+				usedLand.set(x);
+			}
 		}
 	}
 
