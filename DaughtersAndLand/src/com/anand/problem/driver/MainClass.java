@@ -3,17 +3,14 @@ package com.anand.problem.driver;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.BitSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 
 public class MainClass {
 
 	private static Map<Integer, MainClass.Range> selectedMap = new LinkedHashMap<Integer, MainClass.Range>();
 	private static int lengthOfLand = 0;
-	//private static List<Range> unavailableLand = null;
-	private static BitSet usedLand = null;
+	private static boolean[] usedLandArray = null;
 
 	public static void main(String[] args) throws IOException {
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
@@ -22,9 +19,8 @@ public class MainClass {
 		lengthOfLand = Integer.parseInt(firstLine[0]);
 		int noOfDaughters = Integer.parseInt(firstLine[1]);
 
-		//unavailableLand = new ArrayList<MainClass.Range>();
-		usedLand = new BitSet();
-		
+		usedLandArray = new boolean[lengthOfLand];
+
 		MainClass mainClass = new MainClass();
 
 		mainClass.read(in, noOfDaughters);
@@ -32,7 +28,7 @@ public class MainClass {
 		long startTime = System.currentTimeMillis();
 		mainClass.compute(noOfDaughters);
 		long computeTime = System.currentTimeMillis() - startTime;
-		
+
 		System.out.println("ComputeTime: " + computeTime + "(ms)");
 	}
 
@@ -51,10 +47,8 @@ public class MainClass {
 			}
 
 			System.out.println(r.setRangeAndValues(newStart, newEnd));
-			usedLand.set(newStart);
-			usedLand.set(newEnd);
-			//unavailableLand.add(new Range(newEnd, newEnd));
-			
+			usedLandArray[newStart] = true;
+			usedLandArray[newEnd] = true;
 		}
 	}
 
@@ -68,7 +62,7 @@ public class MainClass {
 
 	private int getNewEnd(int end) {
 		for (int test = end + 1; test < lengthOfLand; test++) {
-			if(!usedLand.get(test))
+			if(!usedLandArray[test])
 				return test;
 		}
 		return end;
@@ -76,7 +70,7 @@ public class MainClass {
 
 	private int getNewStart(int start) {
 		for (int test = start - 1; test >= 0; test--) {
-			if(!usedLand.get(test))
+			if(!usedLandArray[test])
 				return test;
 		}
 		return start;
@@ -89,9 +83,8 @@ public class MainClass {
 			Range range = new Range(Integer.parseInt(choice[0]), Integer.parseInt(choice[1]));
 			selectedMap.put(i, range);
 
-			for(int x=range.start;x<=range.end;x++) {
-				usedLand.set(x);
-			}
+			for (int x = range.start; x <= range.end; x++)
+				usedLandArray[x] = true;
 		}
 	}
 
