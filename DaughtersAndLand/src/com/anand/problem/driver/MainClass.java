@@ -15,6 +15,7 @@ public class MainClass {
 	public static void main(String[] args) throws IOException {
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 
+		System.out.println("Enter Input");
 		String[] firstLine = in.readLine().split("\\s");
 		lengthOfLand = Integer.parseInt(firstLine[0]);
 		int noOfDaughters = Integer.parseInt(firstLine[1]);
