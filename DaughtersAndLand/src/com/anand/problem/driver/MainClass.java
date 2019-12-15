@@ -11,6 +11,10 @@ public class MainClass {
 	private static Map<Integer, MainClass.Range> selectedMap = new LinkedHashMap<Integer, MainClass.Range>();
 	private static int lengthOfLand = 0;
 	private static boolean[] usedLandArray = null;
+	//private static int[] debugArray = null;
+	private static long min;
+	private static long max;
+	private static long prerequisiteTime = 0;
 
 	public static void main(String[] args) throws IOException {
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
@@ -21,16 +25,21 @@ public class MainClass {
 		int noOfDaughters = Integer.parseInt(firstLine[1]);
 
 		usedLandArray = new boolean[lengthOfLand];
+		//debugArray = new int[lengthOfLand];
+		min = 0;
+		max = lengthOfLand - 1;
 
 		MainClass mainClass = new MainClass();
 
 		mainClass.read(in, noOfDaughters);
-
+		
 		long startTime = System.currentTimeMillis();
 		mainClass.compute(noOfDaughters);
 		long computeTime = System.currentTimeMillis() - startTime;
 
-		System.out.println("ComputeTime: " + computeTime + "(ms)");
+		System.out.println("Compute Time: " + computeTime + "(ms)");
+		System.out.println("Total TIme: " + (prerequisiteTime + computeTime ) + "(ms)");
+		//in.readLine();
 	}
 
 	private void compute(int noOfDaughters) {
@@ -43,13 +52,17 @@ public class MainClass {
 				newStart = getValidIndex(r.getStart() - 1);
 				newEnd = getValidIndex(r.getEnd() + 1);
 			} else {
-				newStart = getNewStart(r.getStart());
-				newEnd = getNewEnd(r.getEnd());
+				newStart = getNewStart(r.getStart(), i, r.getEnd());
+				newEnd = getNewEnd(r.getEnd(), i, r.getStart());
 			}
 
 			System.out.println(r.setRangeAndValues(newStart, newEnd));
 			usedLandArray[newStart] = true;
 			usedLandArray[newEnd] = true;
+			//debugArray[newStart] = newStart;
+			//debugArray[newEnd] = newEnd;
+			//System.out.println(Arrays.toString(usedLandArray));
+			//System.out.println(Arrays.toString(debugArray));
 		}
 	}
 
@@ -61,31 +74,48 @@ public class MainClass {
 		return index;
 	}
 
-	private int getNewEnd(int end) {
-		for (int test = end + 1; test < lengthOfLand; test++) {
-			if(!usedLandArray[test])
+	private int getNewEnd(int end, int currentIndex, int start) {
+		int test = end + 1;
+		for (; test < max; test++) {
+			if(!usedLandArray[test]) {
 				return test;
+			}
+		}
+		if(test >= max) {
+			max = start - 1;
 		}
 		return end;
+		
 	}
 
-	private int getNewStart(int start) {
-		for (int test = start - 1; test >= 0; test--) {
-			if(!usedLandArray[test])
+	private int getNewStart(int start, int currentIndex, int end) {
+		int test = start - 1;
+		for (; test >= min; test--) {
+			if(!usedLandArray[test]) {
 				return test;
+			}
+		}
+		if(test <= min) {
+			min = end + 1;
 		}
 		return start;
+		
 	}
 
 	private void read(BufferedReader in, int noOfDaughters) throws IOException {
 		for (int i = 0; i < noOfDaughters; i++) {
 			String[] choice = in.readLine().split("\\s");
 
+			long startTime = System.currentTimeMillis();
 			Range range = new Range(Integer.parseInt(choice[0]), Integer.parseInt(choice[1]));
 			selectedMap.put(i, range);
 
-			for (int x = range.start; x <= range.end; x++)
+			for (int x = range.start; x <= range.end; x++) {
 				usedLandArray[x] = true;
+			}
+			prerequisiteTime += (System.currentTimeMillis() - startTime);
+			/*for(int x = range.start; x <= range.end; x++)
+				debugArray[x] = x;*/
 		}
 	}
 
@@ -98,11 +128,11 @@ public class MainClass {
 			this.end = end;
 		}
 
-		public int setRangeAndValues(int newStart, int newEnd) {
-			int value = start;
+		public long setRangeAndValues(int newStart, int newEnd) {
+			long value = start;
 
 			if (this.start != this.end)
-				value = ((this.end - this.start + 1) * (this.start + this.end)) / 2;
+				value = (long)(this.end - this.start + 1) * (long)(this.start + this.end) / 2;
 
 			if (this.end != newEnd)
 				value += newEnd;
@@ -110,6 +140,8 @@ public class MainClass {
 			if (this.start != newStart)
 				value += newStart;
 
+			this.start = newStart;
+			this.end = newEnd;
 			return value;
 		}
 
